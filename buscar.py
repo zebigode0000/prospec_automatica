@@ -8,27 +8,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import json
 
-# LISTA DE EXCLUSÃO (Blacklist) - O robô vai ignorar estas empresas
-blacklist = [
-    "Marmo Corte", "Penhasco Mármores", "CIM GRANITOS", "Brumagran", "Salvador", 
-    "CF Acabamentos", "Topázio Granitos", "Granimaster", "Delta do Brasil", 
-    "Vereda Mármores", "Chapa de Granito", "SIGRAMAR", "Internacionale Granite",
-    "Dugran", "Mr Pedras", "Polita Natural Stone", "Gramarcal", "Paraná granitos",
-    "TrendStone", "SULCAMAR", "Marmoraria Cachoeiro", "São Geraldo", "Tropical Stone",
-    "Original Mármores", "RB Mármore", "Top Stone", "Pedregal", "Margran", 
-    "Sabadini", "Zatha Stone", "Stone marmoraria", "Creative Mármores", "Larne",
-    "rei das pedras", "Sgran Marmores", "Low Price Stone", "M G P Mármores", 
-    "Marmoraria GDS", "Brilhante", "Pedras Nobres", "União Ltda", "Marmonito", 
-    "Bota Pedras", "Vieira Granitos", "Marmoraria Roma", "CJD GRANITOS", "Breda Ltda",
-    "Corteleti", "Fenix", "Rgm granitos", "Marmovix", "Decorato", "Pedras Luminosas",
-    "GM Mármores", "Eldorado Ltda", "Marmoraria Vila Velha", "Hanibal", "Rangel Vieira",
-    "Inova Ltda", "Guarapedras", "CB & S Granitos", "GRAMIL", "Rezende", "Grupo Braspedras",
-    "Vitória Conceito", "Marmoraria Vitoria", "Alto Lage", "Serra Mar", "Fracaroli",
-    "Unopedras", "Granito Brasil", "Santana", "Pedras Naturais", "MARMOPLAN", 
-    "Suldoeste", "Grauna", "Estevão", "GRAN NOBRE", "Resiliência ART", "Ideal Mármores",
-    "Real Pedras", "T&T Mármores", "Grancon", "Petros"
-]
-
 def buscar_marmorarias():
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
@@ -39,60 +18,66 @@ def buscar_marmorarias():
 
     try:
         driver.get("https://www.google.com.br/maps")
-        time.sleep(5) # Pausa para carregar o mapa
+        time.sleep(5)
 
-        # Tenta achar o campo de busca por múltiplos seletores (ID ou Name)
         try:
             search_box = wait.until(EC.element_to_be_clickable((By.NAME, "q")))
         except:
             search_box = wait.until(EC.element_to_be_clickable((By.ID, "searchboxinput")))
         
-        search_box.send_keys("Marmorarias em Espírito Santo")
+        search_box.send_keys("Marmorarias em Ceará")
         search_box.send_keys(Keys.ENTER)
         time.sleep(5)
 
-        leads = []
-        
-        # Scroll para carregar mais resultados
-        for i in range(8):
+        # --- AJUSTE 1: SCROLL MAIS PROFUNDO ---
+        print("Iniciando rolagem profunda para carregar mais de 100 resultados...")
+        for i in range(25):  # Aumentado de 8 para 25 para carregar muito mais locais
             try:
                 scrollable_div = driver.find_element(By.CSS_SELECTOR, 'div[role="feed"]')
                 driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
-                time.sleep(2)
+                time.sleep(2) # Tempo para o Google carregar novos cards
+                if i % 5 == 0:
+                    print(f"Rolagem {i} concluída...")
             except: pass
 
-        # ... (parte inicial do script igual)
-        
+        # Captura todos os cards carregados após a rolagem longa
         cards = driver.find_elements(By.CLASS_NAME, "hfpxzc")
-        print(f"Encontrados {len(cards)} locais. Iniciando extração...")
+        total_encontrado = len(cards)
+        print(f"Total de locais carregados no painel: {total_encontrado}")
+        
+        leads = []
 
-        for card in cards:
-            if len(leads) >= 200: break
+        # --- AJUSTE 2: PROCESSAR TODOS OS CARDS ENCONTRADOS ---
+        for index, card in enumerate(cards):
+            # Limite de segurança aumentado para 300
+            if len(leads) >= 300: break 
             
             try:
-                # 1. Tenta pegar o nome primeiro
                 nome = card.get_attribute("aria-label")
                 
-                # 2. Rola até o elemento e clica com força (JS)
-                driver.execute_script("arguments[0].scrollIntoView();", card)
+                # Scroll individual para o card ficar visível antes do clique
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", card)
+                time.sleep(0.5)
                 driver.execute_script("arguments[0].click();", card)
-                time.sleep(3) # Aumentei o tempo para carregar o painel lateral
+                
+                # --- AJUSTE 3: ESPERA DINÂMICA PELOS DADOS ---
+                # Aguarda o painel lateral atualizar com o novo nome
+                time.sleep(2.5) 
 
-                # 3. Tenta pegar o Telefone (Seletor mais aberto)
+                # Extração do Telefone
                 try:
                     tel_el = driver.find_element(By.XPATH, '//button[contains(@data-item-id, "phone:tel:")]')
                     tel = tel_el.get_attribute("data-item-id").replace("phone:tel:", "")
                 except:
                     tel = "Telefone não encontrado"
 
-                # 4. Tenta pegar o Site
+                # Extração do Site
                 try:
                     site_el = driver.find_element(By.CSS_SELECTOR, 'a[data-item-id="authority"]')
                     site = site_el.get_attribute("href")
                 except:
                     site = "Não tem site"
 
-                # Só adiciona se tiver pelo menos o nome
                 if nome:
                     leads.append({
                         "nome": nome,
@@ -100,10 +85,9 @@ def buscar_marmorarias():
                         "site": site,
                         "status": "❌ Sem Site" if site == "Não tem site" else "✅ Possui Site"
                     })
-                    print(f"✅ Capturado: {nome}")
+                    print(f"✅ [{len(leads)}] Capturado: {nome}")
 
             except Exception as e:
-                print(f"❌ Erro ao processar um card: {e}")
                 continue
 
         return leads
@@ -112,12 +96,8 @@ def buscar_marmorarias():
         driver.quit()
 
 meus_leads = buscar_marmorarias()
-# ... (fim do seu loop de busca)
 
-# SALVAMENTO CORRETO
 with open('dados_leads.js', 'w', encoding='utf-8') as f:
-    # Isso cria o ARQUIVO que o HTML vai ler
     f.write("const leads = " + json.dumps(meus_leads, ensure_ascii=False) + ";")
 
-print("\n✅ ARQUIVO 'dados_leads.js' GERADO COM SUCESSO!")
-print("Agora abra o seu index.html no navegador.")
+print(f"\n✅ SUCESSO! {len(meus_leads)} leads salvos em 'dados_leads.js'.")
