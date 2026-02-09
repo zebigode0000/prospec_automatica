@@ -21,6 +21,7 @@
 
         // MENSAGENS DO AUGUSTO
         const msgSemSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. estava vendo o trabalho de vocês aqui no Maps, as peças de vocês são incríveis. Notei que vocês ainda não aparecem com um site oficial quando buscamos por marmorarias na região. Isso acaba fazendo vocês perderem orçamentos para concorrentes que aparecerem primeiro. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, mostrando como um site profissional mudaria isso?";
+        
         const msgComSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. Estava navegando no site de vocês e gostei muito do trabalho de vocês, mas vi que o site não está valorizando o serviço de vocês como deveria, especialmente no celular. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, e como ele melhora suas vendas e alavanca seu negócio?";
 
         // 2. FUNÇÃO QUE DESENHA OS CARDS NA TELA
@@ -55,26 +56,30 @@
 
         // 3. FUNÇÃO DE ENVIO (BLINDADA)
         function enviar(tel, temSite) {
-            if (!tel || tel.includes("encontrado")) {
-                alert("Número inválido.");
-                return;
-            }
+    if (!tel || tel.includes("encontrado")) {
+        alert("Número inválido.");
+        return;
+    }
 
-            // Limpeza absoluta do número para o link wa.me
-            let telLimpo = tel.replace(/\D/g, ''); 
-            
-            // Garante o 55 do Brasil
-            if (telLimpo.length === 10 || telLimpo.length === 11) {
-                telLimpo = "55" + telLimpo;
-            }
+    // 1. Limpeza total: remove tudo que não é número
+    let telLimpo = tel.replace(/\D/g, ''); 
 
-            const msgFinal = temSite ? msgComSite : msgSemSite;
+    // 2. CORREÇÃO DO ZERO: Se o número começar com '0', ele remove o primeiro dígito
+    if (telLimpo.startsWith('0')) {
+        telLimpo = telLimpo.substring(1);
+    }
 
-            // O segredo está no encodeURIComponent para mensagens longas
-            const url = "https://wa.me/" + telLimpo + "?text=" + encodeURIComponent(msgFinal);
-            
-            window.open(url, '_blank');
-        }
+    // 3. Garante o 55 do Brasil
+    // Se após tirar o zero sobrarem 10 ou 11 dígitos, colocamos o 55
+    if (telLimpo.length === 10 || telLimpo.length === 11) {
+        telLimpo = "55" + telLimpo;
+    }
+
+    const msgFinal = temSite ? msgComSite : msgSemSite;
+    const url = "https://wa.me/" + telLimpo + "?text=" + encodeURIComponent(msgFinal);
+    
+    window.open(url, '_blank');
+}
 
         // Inicia a lista assim que a página abre
         carregarLeads();
