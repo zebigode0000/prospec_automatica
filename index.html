@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Painel de Prospecção</title>
+    <title>Painel de Prospecção - Augusto</title>
 </head>
-<body class="bg-slate-900 text-white p-6">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6 text-blue-400 border-b border-slate-700 pb-4">🎯 Leads Marmorarias ES</h1>
+<body class="bg-slate-900 text-gray-100 p-8">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-blue-500 border-b border-slate-700 pb-4">🎯 Leads Marmorarias ES</h1>
         
-        <div id="lista-leads" class="space-y-4">
+        <div id="lista-leads" class="grid gap-4">
             </div>
     </div>
 
@@ -17,41 +17,54 @@
 
     <script>
         const container = document.getElementById('lista-leads');
-        
-        // Mensagens Automáticas
+
+        // SUAS MENSAGENS PERSONALIZADAS
         const msgSemSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. estava vendo o trabalho de vocês aqui no Maps, as peças de vocês são incríveis. Notei que vocês ainda não aparecem com um site oficial quando buscamos por marmorarias na região. Isso acaba fazendo vocês perderem orçamentos para concorrentes que aparecerem primeiro. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, mostrando como um site profissional mudaria isso?";
         
         const msgComSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. Estava navegando no site de vocês e gostei muito do trabalho de vocês, mas vi que o site não está valorizando o serviço de vocês como deveria, especialmente no celular. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, e como ele melhora suas vendas e alavanca seu negócio?";
 
-        // 2. Verifica se a variável 'leads' existe (veio do arquivo .js)
+        // 2. FUNÇÃO DE ENVIO REVISADA
+        function enviar(tel, temSite) {
+            if (!tel || tel.includes("encontrado")) {
+                alert("Telefone inválido ou não encontrado.");
+                return;
+            }
+            // Limpa o telefone para o link do zap (remove tudo que não é número)
+            let telLimpo = tel.replace(/\D/g, '');
+            if (telLimpo.length <= 11) telLimpo = "55" + telLimpo;
+
+            const msgBase = temSite ? msgComSite : msgSemSite;
+            const url = `https://wa.me/${telLimpo}?text=${encodeURIComponent(msgBase)}`;
+            window.open(url, '_blank');
+        }
+
+        // 3. RENDERIZAÇÃO DA LISTA
         if (typeof leads !== 'undefined' && leads.length > 0) {
             leads.forEach(lead => {
                 const temSite = lead.site !== "Não tem site";
-                const msgFinal = temSite ? msgComSite : msgSemSite;
-                
                 const card = document.createElement('div');
-                card.className = "bg-slate-800 p-5 rounded-lg border border-slate-700 flex justify-between items-center";
+                card.className = `p-5 rounded-xl border flex justify-between items-center bg-slate-800 transition ${!temSite ? 'border-yellow-600/50' : 'border-slate-700'}`;
+                
                 card.innerHTML = `
                     <div>
-                        <h2 class="font-bold text-lg">${lead.nome}</h2>
-                        <p class="text-sm text-gray-400">📞 ${lead.tel}</p>
-                        <p class="text-xs ${temSite ? 'text-blue-400' : 'text-yellow-500'} italic">${lead.site}</p>
+                        <h2 class="text-xl font-bold">${lead.nome}</h2>
+                        <p class="text-gray-400 text-sm">📞 ${lead.tel}</p>
+                        <p class="text-xs italic mt-1 ${temSite ? 'text-blue-400' : 'text-yellow-500'}">
+                            ${temSite ? lead.site : '⚠️ Sem site oficial'}
+                        </p>
                     </div>
-                    <button onclick="window.open('https://wa.me/${lead.tel}?text=${encodeURIComponent(msgFinal)}')" 
-                            class="bg-green-600 hover:bg-green-500 px-6 py-2 rounded font-bold transition">
+                    <button onclick="enviar('${lead.tel}', ${temSite})" 
+                            class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
                         Mandar Zap
                     </button>
                 `;
                 container.appendChild(card);
             });
         } else {
-            // Se não carregou nada, mostra este erro na tela
             container.innerHTML = `
-                <div class="bg-red-900/20 border border-red-500 p-8 rounded-lg text-center">
-                    <p class="text-red-500 font-bold text-xl">❌ LISTA NÃO CARREGADA</p>
-                    <p class="text-gray-400 mt-2">Certifique-se de que o arquivo <b>dados_leads.js</b> está na mesma pasta que este HTML.</p>
-                </div>
-            `;
+                <div class="p-10 border-2 border-dashed border-slate-700 text-center text-gray-500 rounded-xl">
+                    Nenhum lead carregado. Certifique-se de que o arquivo <b>dados_leads.js</b> existe na mesma pasta.
+                </div>`;
         }
     </script>
 </body>
