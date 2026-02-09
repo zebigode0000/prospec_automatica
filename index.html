@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Painel de Prospecção</title>
+</head>
+<body class="bg-slate-900 text-white p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-blue-400 border-b border-slate-700 pb-4">🎯 Leads Marmorarias ES</h1>
+        
+        <div id="lista-leads" class="space-y-4">
+            </div>
+    </div>
+
+    <script src="dados_leads.js"></script>
+
+    <script>
+        const container = document.getElementById('lista-leads');
+        
+        // Mensagens Automáticas
+        const msgSemSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. estava vendo o trabalho de vocês aqui no Maps, as peças de vocês são incríveis. Notei que vocês ainda não aparecem com um site oficial quando buscamos por marmorarias na região. Isso acaba fazendo vocês perderem orçamentos para concorrentes que aparecerem primeiro. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, mostrando como um site profissional mudaria isso?";
+        
+        const msgComSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. Estava navegando no site de vocês e gostei muito do trabalho de vocês, mas vi que o site não está valorizando o serviço de vocês como deveria, especialmente no celular. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, e como ele melhora suas vendas e alavanca seu negócio?";
+
+        // 2. Verifica se a variável 'leads' existe (veio do arquivo .js)
+        if (typeof leads !== 'undefined' && leads.length > 0) {
+            leads.forEach(lead => {
+                const temSite = lead.site !== "Não tem site";
+                const msgFinal = temSite ? msgComSite : msgSemSite;
+                
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 p-5 rounded-lg border border-slate-700 flex justify-between items-center";
+                card.innerHTML = `
+                    <div>
+                        <h2 class="font-bold text-lg">${lead.nome}</h2>
+                        <p class="text-sm text-gray-400">📞 ${lead.tel}</p>
+                        <p class="text-xs ${temSite ? 'text-blue-400' : 'text-yellow-500'} italic">${lead.site}</p>
+                    </div>
+                    <button onclick="window.open('https://wa.me/${lead.tel}?text=${encodeURIComponent(msgFinal)}')" 
+                            class="bg-green-600 hover:bg-green-500 px-6 py-2 rounded font-bold transition">
+                        Mandar Zap
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        } else {
+            // Se não carregou nada, mostra este erro na tela
+            container.innerHTML = `
+                <div class="bg-red-900/20 border border-red-500 p-8 rounded-lg text-center">
+                    <p class="text-red-500 font-bold text-xl">❌ LISTA NÃO CARREGADA</p>
+                    <p class="text-gray-400 mt-2">Certifique-se de que o arquivo <b>dados_leads.js</b> está na mesma pasta que este HTML.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
