@@ -10,7 +10,8 @@
         <h1 class="text-3xl font-bold mb-8 text-blue-500 border-b border-slate-700 pb-4">🎯 Leads Marmorarias ES</h1>
         
         <div id="lista-leads" class="grid gap-4">
-            </div>
+            <p class="text-gray-500 italic">Aguardando dados do arquivo dados_leads.js...</p>
+        </div>
     </div>
 
     <script src="dados_leads.js"></script>
@@ -18,54 +19,65 @@
     <script>
         const container = document.getElementById('lista-leads');
 
-        // SUAS MENSAGENS PERSONALIZADAS
+        // MENSAGENS DO AUGUSTO
         const msgSemSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. estava vendo o trabalho de vocês aqui no Maps, as peças de vocês são incríveis. Notei que vocês ainda não aparecem com um site oficial quando buscamos por marmorarias na região. Isso acaba fazendo vocês perderem orçamentos para concorrentes que aparecerem primeiro. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, mostrando como um site profissional mudaria isso?";
-        
         const msgComSite = "Prazer, eu me chamo Augusto, sou especialista em presença digital para o setor de marmoraria. Estava navegando no site de vocês e gostei muito do trabalho de vocês, mas vi que o site não está valorizando o serviço de vocês como deveria, especialmente no celular. Você se importa se eu enviar um exemplo de Vitrine profissional que eu mesmo desenvolvi, sem compromisso, e como ele melhora suas vendas e alavanca seu negócio?";
 
-        // 2. FUNÇÃO DE ENVIO REVISADA
+        // 2. FUNÇÃO QUE DESENHA OS CARDS NA TELA
+        function carregarLeads() {
+            if (typeof leads !== 'undefined' && leads.length > 0) {
+                container.innerHTML = ''; // Limpa o texto de aviso
+                
+                leads.forEach(lead => {
+                    const temSite = lead.site !== "Não tem site";
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-800 p-5 rounded-xl border border-slate-700 flex justify-between items-center hover:border-blue-500 transition-all";
+                    
+                    card.innerHTML = `
+                        <div>
+                            <h2 class="text-xl font-bold">${lead.nome}</h2>
+                            <p class="text-gray-400 text-sm">📞 ${lead.tel}</p>
+                            <p class="text-xs mt-1 ${temSite ? 'text-blue-400' : 'text-yellow-500'} italic">
+                                ${temSite ? lead.site : '⚠️ Sem site oficial'}
+                            </p>
+                        </div>
+                        <button onclick="enviar('${lead.tel}', ${temSite})" 
+                                class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            Mandar WhatsApp
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p class="text-red-400">Nenhum lead encontrado no arquivo dados_leads.js</p>';
+            }
+        }
+
+        // 3. FUNÇÃO DE ENVIO (BLINDADA)
         function enviar(tel, temSite) {
             if (!tel || tel.includes("encontrado")) {
-                alert("Telefone inválido ou não encontrado.");
+                alert("Número inválido.");
                 return;
             }
-            // Limpa o telefone para o link do zap (remove tudo que não é número)
-            let telLimpo = tel.replace(/\D/g, '');
-            if (telLimpo.length <= 11) telLimpo = "55" + telLimpo;
 
-            const msgBase = temSite ? msgComSite : msgSemSite;
-            const url = `https://wa.me/${telLimpo}?text=${encodeURIComponent(msgBase)}`;
+            // Limpeza absoluta do número para o link wa.me
+            let telLimpo = tel.replace(/\D/g, ''); 
+            
+            // Garante o 55 do Brasil
+            if (telLimpo.length === 10 || telLimpo.length === 11) {
+                telLimpo = "55" + telLimpo;
+            }
+
+            const msgFinal = temSite ? msgComSite : msgSemSite;
+
+            // O segredo está no encodeURIComponent para mensagens longas
+            const url = "https://wa.me/" + telLimpo + "?text=" + encodeURIComponent(msgFinal);
+            
             window.open(url, '_blank');
         }
 
-        // 3. RENDERIZAÇÃO DA LISTA
-        if (typeof leads !== 'undefined' && leads.length > 0) {
-            leads.forEach(lead => {
-                const temSite = lead.site !== "Não tem site";
-                const card = document.createElement('div');
-                card.className = `p-5 rounded-xl border flex justify-between items-center bg-slate-800 transition ${!temSite ? 'border-yellow-600/50' : 'border-slate-700'}`;
-                
-                card.innerHTML = `
-                    <div>
-                        <h2 class="text-xl font-bold">${lead.nome}</h2>
-                        <p class="text-gray-400 text-sm">📞 ${lead.tel}</p>
-                        <p class="text-xs italic mt-1 ${temSite ? 'text-blue-400' : 'text-yellow-500'}">
-                            ${temSite ? lead.site : '⚠️ Sem site oficial'}
-                        </p>
-                    </div>
-                    <button onclick="enviar('${lead.tel}', ${temSite})" 
-                            class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
-                        Mandar Zap
-                    </button>
-                `;
-                container.appendChild(card);
-            });
-        } else {
-            container.innerHTML = `
-                <div class="p-10 border-2 border-dashed border-slate-700 text-center text-gray-500 rounded-xl">
-                    Nenhum lead carregado. Certifique-se de que o arquivo <b>dados_leads.js</b> existe na mesma pasta.
-                </div>`;
-        }
+        // Inicia a lista assim que a página abre
+        carregarLeads();
     </script>
 </body>
 </html>
