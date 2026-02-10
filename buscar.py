@@ -25,7 +25,7 @@ def buscar_marmorarias():
         except:
             search_box = wait.until(EC.element_to_be_clickable((By.ID, "searchboxinput")))
         
-        search_box.send_keys("Marmorarias em Ceará")
+        search_box.send_keys("Marmorarias em Santos")
         search_box.send_keys(Keys.ENTER)
         time.sleep(5)
 
